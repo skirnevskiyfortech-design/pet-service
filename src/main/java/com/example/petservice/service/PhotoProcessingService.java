@@ -36,7 +36,8 @@ public class PhotoProcessingService {
 
         if (fileData.length > maxFileSize) {
             throw new FileTooLargeException(
-                    "File size exceeds limit: " + fileData.length + " bytes (max. " + maxFileSize + ")"
+                    "File size exceeds limit: " + fileData.length
+                            + " bytes (max. " + maxFileSize + ")"
             );
         }
 
@@ -71,7 +72,7 @@ public class PhotoProcessingService {
     }
 
 
-    // Проверка, является ли IP-адрес частным/локальным.
+    // Проверка является ли IP-адрес частным/локальным.
 
     private boolean isPrivateIp(InetAddress address) {
         return address.isLoopbackAddress()

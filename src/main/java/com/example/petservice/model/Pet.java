@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.openapi.example.model.PetRequest;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;

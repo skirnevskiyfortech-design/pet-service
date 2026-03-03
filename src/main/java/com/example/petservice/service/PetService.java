@@ -1,7 +1,6 @@
 package com.example.petservice.service;
 
 import com.example.petservice.dto.FileData;
-import com.example.petservice.exception.PetAlreadyExistsException;
 import com.example.petservice.exception.PetNotFoundException;
 import com.example.petservice.mapper.PetMapper;
 import com.example.petservice.model.Category;
@@ -126,7 +125,8 @@ public class PetService {
 
             return response;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Error downloading file from URL: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Error downloading file from URL: "
+                    + e.getMessage(), e);
         }
     }
 }

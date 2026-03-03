@@ -50,7 +50,8 @@ public class MinioService {
     }
 
 
-// Сохраняет файл из InputStream в MinIO и записывает метаданные в бд, используется для загрузки по URL
+// Сохраняет файл из InputStream в MinIO
+// и записывает метаданные в бд, используется для загрузки по URL
     public FileMetadata saveFileFromData(
             InputStream inputStream,
             String fileName,
