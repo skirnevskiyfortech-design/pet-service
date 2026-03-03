@@ -1,0 +1,46 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: pet-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pet_service
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none # В продакшене лучше 'validate' или 'none', если используешь Liquibase
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+photo:
+  max-file-size: 10485760
+  connection-timeout: 5000
+  read-timeout: 10000
+
+minio:
+  url: http://localhost:9000
+  user: minioadmin
+  password: minioadmin
+  bucket: pet-service-files
+  bucket-policy: public-read
+
+springdoc:
+  swagger-ui:
+    url: /pet-service-api.yaml
+
+logging:
+  level:
+    liquibase: DEBUG

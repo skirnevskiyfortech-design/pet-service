@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-pets-schema-with-tag-entity
+      author: your-name
+      comment: "Полная схема: Pets, Categories, Tags, Photos c связями"
+      changes:
+        # 1. Таблица pets
+        - createTable:
+            tableName: pets
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints: { nullable: false }
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints: { nullable: false }
+              - column:
+                  name: category_id
+                  type: bigint
+                  constraints: { nullable: false } # Категория обязательна
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints: { nullable: false }
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints: { nullable: false }
+
+        # FK: Pets -> Categories
+        - addForeignKeyConstraint:
+            baseTableName: pets
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_pets_categories
+            onDelete: RESTRICT
+
+        # Индексы для Pets
+        - createIndex:
+            indexName: idx_pets_category_id
+            tableName: pets
+            columns: [{ column: { name: category_id } }]
+        - createIndex:
+            indexName: idx_pets_status
+            tableName: pets
+            columns: [{ column: { name: status } }]
+
+        # 2. Таблица связи pet_tags (Many-to-Many)
+        - createTable:
+            tableName: pet_tags
+            columns:
+              - column:
+                  name: pet_id
+                  type: bigint
+                  constraints: { nullable: false }
+              - column:
+                  name: tag_id
+                  type: bigint
+                  constraints: { nullable: false }
+
+        # Составной PK
+        - addPrimaryKey:
+            tableName: pet_tags
+            columnNames: pet_id, tag_id
+            constraintName: pk_pet_tags
+
+        # FK: pet_tags -> pets
+        - addForeignKeyConstraint:
+            baseTableName: pet_tags
+            baseColumnNames: pet_id
+            referencedTableName: pets
+            referencedColumnNames: id
+            constraintName: fk_pet_tags_pet
+            onDelete: CASCADE # Удаляем записи тегов при удалении питомца
+
+        # FK: pet_tags -> tags
+        - addForeignKeyConstraint:
+            baseTableName: pet_tags
+            baseColumnNames: tag_id
+            referencedTableName: tags
+            referencedColumnNames: id
+            constraintName: fk_pet_tags_tag
+            onDelete: RESTRICT # Не даем удалить тег, если он используется
+
+        # Индекс для быстрого поиска питомцев по тегу
+        - createIndex:
+            indexName: idx_pet_tags_tag_id
+            tableName: pet_tags
+            columns: [{ column: { name: tag_id } }]
+
+        # 3. Таблица pet_photos (ElementCollection)
+        - createTable:
+            tableName: pet_photos
+            columns:
+              - column:
+                  name: pet_id
+                  type: bigint
+                  constraints: { nullable: false }
+              - column:
+                  name: file_id
+                  type: varchar(255)
+                  constraints: { nullable: false }
+
+        - addPrimaryKey:
+            tableName: pet_photos
+            columnNames: pet_id, file_id
+            constraintName: pk_pet_photos
+
+        - addForeignKeyConstraint:
+            baseTableName: pet_photos
+            baseColumnNames: pet_id
+            referencedTableName: pets
+            referencedColumnNames: id
+            constraintName: fk_pet_photos_pet
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_pet_photos_pet_id
+            tableName: pet_photos
+            columns: [{ column: { name: pet_id } }]

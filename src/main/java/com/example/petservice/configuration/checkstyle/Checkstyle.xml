@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Кастомный Checkstyle конфиг
+    Отступы      : табы
+    Строка       : макс. 100 символов
+    Star-import  : запрещён
+    Пустые блоки : запрещены
+    Файлы        : только .java (.properties, .yaml, .yml исключены)
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+
+    <!-- Проверяем ТОЛЬКО .java файлы -->
+    <!-- .properties, .yaml, .yml — не трогаем -->
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Исключаем module-info.java -->
+    <module name="BeforeExecutionExclusionFileFilter">
+        <property name="fileNamePattern" value="module\-info\.java$"/>
+    </module>
+
+    <!-- ═══════════════════════════════════════
+         ФАЙЛОВЫЙ УРОВЕНЬ
+         ═══════════════════════════════════════ -->
+
+    <!-- Максимальная длина строки: 100 символов (таб считается за 1) -->
+    <module name="LineLength">
+        <property name="max" value="100"/>
+        <property name="tabWidth" value="1"/>
+        <message key="maxLineLength"
+                 value="Строка длиннее {0} символов (текущая: {1})."/>
+    </module>
+
+    <!-- Файл должен заканчиваться переводом строки -->
+    <module name="NewlineAtEndOfFile"/>
+
+    <!-- Запрет trailing whitespace -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Пробелы в конце строки запрещены."/>
+    </module>
+
+
+    <!-- ═══════════════════════════════════════
+         TREE WALKER — проверки на уровне AST
+         ═══════════════════════════════════════ -->
+    <module name="TreeWalker">
+
+        <!-- Таб-символы разрешены как отступ -->
+        <property name="tabWidth" value="4"/>
+
+        <!-- ───── Импорты ───── -->
+
+        <!-- Запрет star-импортов: import java.util.*  -->
+        <module name="AvoidStarImport">
+            <message key="import.avoidStar"
+                     value="Star-import запрещён: ''{0}''. Импортируй классы явно."/>
+        </module>
+
+        <!-- Запрет дублирующихся импортов -->
+        <module name="RedundantImport">
+            <message key="import.duplicate"
+                     value="Дублирующийся импорт: ''{1}''."/>
+            <message key="import.same"
+                     value="Импорт из того же пакета не нужен: ''{0}''."/>
+        </module>
+
+        <!-- Запрет неиспользуемых импортов -->
+        <module name="UnusedImports">
+            <message key="import.unused"
+                     value="Неиспользуемый импорт: ''{0}''."/>
+        </module>
+
+
+        <!-- ───── Пустые блоки ───── -->
+
+        <!-- Запрет пустых catch-блоков (разрешён только с комментарием) -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="ignored|expected"/>
+            <message key="catchBlock.empty"
+                     value="Пустой catch-блок запрещён. Добавь комментарий или обработку исключения."/>
+        </module>
+
+        <!-- Запрет пустых блоков в if/else/try/finally/for/while/do/switch -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+            <property name="tokens"
+                      value="LITERAL_WHILE, LITERAL_TRY, LITERAL_FINALLY,
+                             LITERAL_DO, LITERAL_IF, LITERAL_ELSE,
+                             LITERAL_FOR, LITERAL_SWITCH,
+                             INSTANCE_INIT, STATIC_INIT,
+                             LITERAL_CASE, LITERAL_DEFAULT,
+                             ARRAY_INIT"/>
+            <message key="block.empty"
+                     value="Пустой блок ''{0}'' запрещён."/>
+        </module>
+
+        <!-- Запрет пустых операторов (одиночная точка с запятой) -->
+        <module name="EmptyStatement">
+            <message key="empty.statement"
+                     value="Пустой оператор. Возможно, лишняя '';''."/>
+        </module>
+
+
+        <!-- ───── Скобки и структура ───── -->
+
+        <!-- Фигурные скобки обязательны для if/else/for/while/do -->
+        <module name="NeedBraces">
+            <message key="needBraces"
+                     value="Блок ''{0}'' должен быть обёрнут в фигурные скобки."/>
+        </module>
+
+        <!-- Открывающая скобка на той же строке -->
+        <module name="LeftCurly">
+            <message key="line.new"
+                     value="Открывающая скобка должна быть на той же строке."/>
+        </module>
+
+        <!-- Закрывающая скобка — правила размещения -->
+        <module name="RightCurly">
+            <message key="line.alone"
+                     value="Закрывающая скобка должна быть на отдельной строке."/>
+            <message key="line.same"
+                     value="Закрывающая скобка должна быть на той же строке, что и следующий блок."/>
+        </module>
+
+
+        <!-- ───── Именование ───── -->
+
+        <!-- Классы и интерфейсы: UpperCamelCase -->
+        <module name="TypeName">
+            <message key="name.invalidPattern"
+                     value="Имя типа ''{0}'' должно быть в формате UpperCamelCase."/>
+        </module>
+
+        <!-- Методы: lowerCamelCase -->
+        <module name="MethodName">
+            <message key="name.invalidPattern"
+                     value="Имя метода ''{0}'' должно быть в формате lowerCamelCase."/>
+        </module>
+
+        <!-- Переменные: lowerCamelCase -->
+        <module name="LocalVariableName">
+            <message key="name.invalidPattern"
+                     value="Локальная переменная ''{0}'' должна быть в формате lowerCamelCase."/>
+        </module>
+
+        <!-- Параметры: lowerCamelCase -->
+        <module name="ParameterName">
+            <message key="name.invalidPattern"
+                     value="Параметр ''{0}'' должен быть в формате lowerCamelCase."/>
+        </module>
+
+        <!-- Константы: UPPER_SNAKE_CASE -->
+        <module name="ConstantName">
+            <message key="name.invalidPattern"
+                     value="Константа ''{0}'' должна быть в формате UPPER_SNAKE_CASE."/>
+        </module>
+
+        <!-- Поля класса: lowerCamelCase -->
+        <module name="MemberName">
+            <message key="name.invalidPattern"
+                     value="Поле ''{0}'' должно быть в формате lowerCamelCase."/>
+        </module>
+
+
+        <!-- ───── Прочие хорошие практики ───── -->
+
+        <!-- Запрет дефолтных значений switch без default-ветки -->
+        <module name="MissingSwitchDefault">
+            <message key="missing.switch.default"
+                     value="В switch должна быть ветка default."/>
+        </module>
+
+        <!-- Предотвращение fall-through в switch (без break/return/throw) -->
+        <module name="FallThrough">
+            <message key="fall.through"
+                     value="Fall-through в switch без комментария запрещён."/>
+        </module>
+
+        <!-- Запрет изменения параметров метода -->
+        <module name="ParameterAssignment">
+            <message key="parameter.assignment"
+                     value="Изменение параметра ''{0}'' запрещено. Создай локальную переменную."/>
+        </module>
+
+        <!-- Один оператор на строку -->
+        <module name="OneStatementPerLine">
+            <message key="multiple.statements.line"
+                     value="Один оператор на строку."/>
+        </module>
+
+        <!-- Один класс верхнего уровня на файл -->
+        <module name="OneTopLevelClass">
+            <message key="one.top.level.class"
+                     value="Только один класс верхнего уровня на файл."/>
+        </module>
+
+    </module>
+</module>
