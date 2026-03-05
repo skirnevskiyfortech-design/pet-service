@@ -1,11 +1,13 @@
 package com.example.petservice.service;
 
+import com.example.petservice.configuration.MinioProperties;
 import com.example.petservice.model.FileMetadata;
 import com.example.petservice.repository.FileMetadataRepository;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,13 +17,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MinioService {
 
     private final MinioClient minioClient;
     private final FileMetadataRepository fileMetadataRepository;
-
-    @Value("${minio.bucket}")
-    private String bucketName;
+    private final MinioProperties minioProperties;
 
     public FileMetadata uploadFile(MultipartFile file) throws Exception {
         String original = file.getOriginalFilename();
@@ -31,7 +32,7 @@ public class MinioService {
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(bucketName)
+                            .bucket(minioProperties.getBucket())
                             .object(filePath)
                             .stream(inputStream, file.getSize(), -1)
                             .contentType(file.getContentType())
@@ -39,18 +40,39 @@ public class MinioService {
             );
         }
 
-        FileMetadata metadata = new FileMetadata();
-        metadata.setFileName(original);
-        metadata.setFilePath(filePath);
-        metadata.setContentType(file.getContentType());
-        metadata.setSize(file.getSize());
-        metadata.setCreatedAt(LocalDateTime.now());
+        FileMetadata metadata = FileMetadata.builder()
+                .fileName(original)
+                .filePath(filePath)
+                .contentType(file.getContentType())
+                .size(file.getSize())
+                .createdAt(LocalDateTime.now())
+                .build();
 
         return fileMetadataRepository.save(metadata);
     }
 
+    public void deleteFile(String fileId) throws Exception {
+        Long id = Long.parseLong(fileId);
 
-// Сохраняет файл из InputStream в MinIO и записывает метаданные в бд, используется для загрузки по URL
+        FileMetadata metadata = fileMetadataRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileId));
+
+        minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                        .bucket(minioProperties.getBucket())
+                        .object(metadata.getFilePath())
+                        .build()
+        );
+
+        fileMetadataRepository.delete(metadata);
+
+        log.info("Deleted file: {} from bucket: {}", metadata.getFilePath(), minioProperties.getBucket());
+    }
+
+    /*
+    Сохраняет файл из InputStream в MinIO
+    и записывает метаданные в бд, используется для загрузки по URL
+     */
     public FileMetadata saveFileFromData(
             InputStream inputStream,
             String fileName,
@@ -62,19 +84,20 @@ public class MinioService {
 
         minioClient.putObject(
                 PutObjectArgs.builder()
-                        .bucket(bucketName)
+                        .bucket(minioProperties.getBucket())
                         .object(filePath)
                         .stream(inputStream, size, -1)
                         .contentType(contentType)
                         .build()
         );
 
-        FileMetadata metadata = new FileMetadata();
-        metadata.setFileName(fileName);
-        metadata.setFilePath(filePath);
-        metadata.setContentType(contentType);
-        metadata.setSize(size);
-        metadata.setCreatedAt(LocalDateTime.now());
+        FileMetadata metadata = FileMetadata.builder()
+                .fileName(fileName)
+                .filePath(filePath)
+                .contentType(contentType)
+                .size(size)
+                .createdAt(LocalDateTime.now())
+                .build();
 
         return fileMetadataRepository.save(metadata);
     }

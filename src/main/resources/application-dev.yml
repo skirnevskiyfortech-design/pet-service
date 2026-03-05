@@ -1,0 +1,24 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pet_service
+    username: postgres
+    password: postgres
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+minio:
+  url: http://localhost:9000
+  user: minioadmin
+  password: minioadmin
+
+logging:
+  level:
+    liquibase: DEBUG
+    root: INFO

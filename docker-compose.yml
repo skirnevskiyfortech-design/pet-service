@@ -1,4 +1,22 @@
 services:
+  pet-service:
+    build: .
+    container_name: pet-service-app
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/pet_service
+      - DATABASE_USER=${DB_USER}
+      - DATABASE_PASS=${DB_PASS}
+
+      - MINIO_URL=http://minio:9000
+      - MINIO_USER=${MINIO_USER}
+      - MINIO_PASS=${MINIO_PASS}
+
   postgres:
     image: postgres:17-alpine
     container_name: pet-service-db
@@ -16,9 +34,9 @@ services:
       timeout: 5s
       retries: 5
 
-
   minio:
     image: minio/minio
+    container_name: pet-service-minio
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"

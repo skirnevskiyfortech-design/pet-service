@@ -2,12 +2,10 @@ package com.example.petservice.model;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.openapi.example.model.PetRequest;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +13,9 @@ import java.util.List;
 @Entity
 @Table(name = "pets")
 @Data
-@RequiredArgsConstructor
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Pet {
 
     @Id
@@ -39,6 +39,7 @@ public class Pet {
             joinColumns = @JoinColumn(name = "pet_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
+    @Singular
     private List<Tag> tags = new ArrayList<>();
 
     @ElementCollection

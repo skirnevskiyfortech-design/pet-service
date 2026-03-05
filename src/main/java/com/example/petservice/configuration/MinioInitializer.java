@@ -6,7 +6,6 @@ import io.minio.MinioClient;
 import io.minio.SetBucketPolicyArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -17,60 +16,59 @@ import org.springframework.stereotype.Component;
 public class MinioInitializer {
 
     private final MinioClient minioClient;
-
-    @Value("${minio.bucket}")
-    private String bucketName;
-
-    @Value("${minio.bucket-policy:public-read}")
-    private String bucketPolicy;
+    private final MinioProperties minioProperties;
 
     @EventListener(ApplicationReadyEvent.class)
     public void createBucketOnStartup() {
         try {
             boolean exists = minioClient.bucketExists(
                     BucketExistsArgs.builder()
-                            .bucket(bucketName)
+                            .bucket(minioProperties.getBucket())
                             .build()
             );
 
             if (exists) {
-                log.info("Bucket '{}' already exists", bucketName);
+                log.info("Bucket '{}' already exists",
+                        minioProperties.getBucket());
             } else {
                 minioClient.makeBucket(
                         MakeBucketArgs.builder()
-                                .bucket(bucketName)
+                                .bucket(minioProperties.getBucket())
                                 .build()
                 );
-                log.info("Bucket '{}' created successfully", bucketName);
+                log.info("Bucket '{}' created successfully",
+                        minioProperties.getBucket());
             }
 
             applyBucketPolicy();
 
         } catch (Exception e) {
-            log.error("Failed to create bucket '{}': {}", bucketName, e.getMessage(), e);
+            log.error("Failed to create bucket '{}': {}",
+                    minioProperties.getBucket(),
+                    e.getMessage(), e);
         }
     }
 
     private void applyBucketPolicy() throws Exception {
-        String policy = switch (bucketPolicy.toLowerCase()) {
+        String policy = switch (minioProperties.getBucketPolicy().toLowerCase()) {
             case "public-read" -> """
-                {
-                  "Version": "2012-10-17",
-                  "Statement": [{
-                    "Effect": "Allow",
-                    "Principal": {"AWS": ["*"]},
-                    "Action": ["s3:GetObject"],
-                    "Resource": ["arn:aws:s3:::%s/*"]
-                  }]
-                }
-                """.formatted(bucketName);
+                    {
+                      "Version": "2012-10-17",
+                      "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {"AWS": ["*"]},
+                        "Action": ["s3:GetObject"],
+                        "Resource": ["arn:aws:s3:::%s/*"]
+                      }]
+                    }
+                    """.formatted(minioProperties.getBucket());
 
             case "private" -> """
-                {
-                  "Version": "2012-10-17",
-                  "Statement": []
-                }
-                """;
+                    {
+                      "Version": "2012-10-17",
+                      "Statement": []
+                    }
+                    """;
 
             default -> null;
         };
@@ -78,11 +76,13 @@ public class MinioInitializer {
         if (policy != null) {
             minioClient.setBucketPolicy(
                     SetBucketPolicyArgs.builder()
-                            .bucket(bucketName)
+                            .bucket(minioProperties.getBucket())
                             .config(policy)
                             .build()
             );
-            log.info("Policy '{}' applied to bucket '{}'", bucketPolicy, bucketName);
+            log.info("Policy '{}' applied to bucket '{}'",
+                    minioProperties.getBucketPolicy(),
+                    minioProperties.getBucket());
         }
     }
 }

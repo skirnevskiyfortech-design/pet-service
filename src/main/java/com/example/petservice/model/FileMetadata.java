@@ -2,15 +2,19 @@ package com.example.petservice.model;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "file_metadata")
 @Data
-@RequiredArgsConstructor
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FileMetadata {
 
     @Id
@@ -21,10 +25,10 @@ public class FileMetadata {
     private String fileName;
 
     @Column(nullable = false)
-    private String filePath; // путь в minio
+    private String filePath;
 
     @Column(nullable = false)
-    private String contentType; // типо .jpg → image/jpeg или .png → image/png
+    private String contentType;
 
     @Column(nullable = false)
     private Long size;
