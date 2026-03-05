@@ -1,23 +1,22 @@
 server:
-  port: 8081
+  port: 8080
 
 spring:
   application:
     name: pet-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/pet_service
-    username: postgres
-    password: postgres
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASS}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: none # В продакшене лучше 'validate' или 'none', если используешь Liquibase
-    show-sql: true
+      ddl-auto: none
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   liquibase:
@@ -30,16 +29,12 @@ photo:
   read-timeout: 10000
 
 minio:
-  url: http://localhost:9000
-  user: minioadmin
-  password: minioadmin
+  url: ${MINIO_URL}
+  user: ${MINIO_USER}
+  password: ${MINIO_PASS}
   bucket: pet-service-files
   bucket-policy: public-read
 
 springdoc:
   swagger-ui:
     url: /pet-service-api.yaml
-
-logging:
-  level:
-    liquibase: DEBUG
