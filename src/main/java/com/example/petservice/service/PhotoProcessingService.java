@@ -1,10 +1,11 @@
 package com.example.petservice.service;
 
+import com.example.petservice.configuration.PhotoProperties;
 import com.example.petservice.dto.FileData;
 import com.example.petservice.exception.FileTooLargeException;
+import com.example.petservice.model.FileMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
@@ -20,24 +21,20 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class PhotoProcessingService {
 
-    @Value("${photo.max-file-size}") // 10 MB
-    private long maxFileSize;
-
-    @Value("${photo.connection-timeout}")
-    private int connectionTimeout;
-
-    @Value("${photo.read-timeout}")
-    private int readTimeout;
+    private final PhotoProperties photoProperties;
+    private final MinioService minioService;
 
     public FileData downloadFromUrl(String url) throws Exception {
         validateUrl(url);
-        // загрузка файла
+        /*
+        загрузка файла
+        */
         byte[] fileData = downloadFile(url);
 
-        if (fileData.length > maxFileSize) {
+        if (fileData.length > photoProperties.getMaxFileSize()) {
             throw new FileTooLargeException(
                     "File size exceeds limit: " + fileData.length
-                            + " bytes (max. " + maxFileSize + ")"
+                            + " bytes (max. " + photoProperties.getMaxFileSize() + ")"
             );
         }
 
@@ -53,7 +50,31 @@ public class PhotoProcessingService {
         );
     }
 
-    // валидация url для безопасности
+    public String uploadImageFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new IllegalArgumentException("Image URL is required");
+        }
+
+        try {
+            FileData fileData = downloadFromUrl(imageUrl);
+
+            FileMetadata savedFile = minioService.saveFileFromData(
+                    fileData.toInputStream(),
+                    fileData.fileName(),
+                    fileData.contentType(),
+                    fileData.size()
+            );
+
+            return savedFile.getId().toString();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error downloading file from URL: "
+                    + e.getMessage(), e);
+        }
+    }
+
+    /*
+    валидация url для безопасности
+     */
     private void validateUrl(String urlString) throws Exception {
         URL url = new URL(urlString);
 
@@ -71,9 +92,9 @@ public class PhotoProcessingService {
         }
     }
 
-
-    // Проверка является ли IP-адрес частным/локальным.
-
+    /*
+     Проверка является ли IP-адрес частным/локальным
+     */
     private boolean isPrivateIp(InetAddress address) {
         return address.isLoopbackAddress()
                 || address.isAnyLocalAddress()
@@ -82,15 +103,17 @@ public class PhotoProcessingService {
                 || address.isMulticastAddress();
     }
 
-    //Загрузка файла через HttpClient.
+    /*
+    Загрузка файла через HttpClient
+     */
     private byte[] downloadFile(String url) throws Exception {
         HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofMillis(connectionTimeout))
+                .connectTimeout(Duration.ofMillis(photoProperties.getConnectionTimeout()))
                 .build();
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(java.net.URI.create(url))
-                .timeout(Duration.ofMillis(readTimeout))
+                .timeout(Duration.ofMillis(photoProperties.getReadTimeout()))
                 .GET()
                 .build();
 
@@ -108,7 +131,6 @@ public class PhotoProcessingService {
         return response.body();
     }
 
-
     private String extractFileName(String url) {
         String path = java.net.URI.create(url).getPath();
         String fileName = path.substring(path.lastIndexOf('/') + 1);
@@ -117,6 +139,4 @@ public class PhotoProcessingService {
         }
         return fileName;
     }
-
-
 }
